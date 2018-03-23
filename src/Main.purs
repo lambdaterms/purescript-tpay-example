@@ -3,12 +3,14 @@ module Main where
 import Prelude
 
 import API.Tpay.Request as Tpay
-import Control.IxMonad (ibind, (:*>))
+import API.Tpay.Response (validateResponse)
+import Control.IxMonad (ibind, ijoin, (:*>))
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Console (logShow)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (CONSOLE, log)
+import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Free (Free)
 import Data.Either (Either(..))
 import Data.Foldable (sequence_)
@@ -18,10 +20,11 @@ import Data.MediaType.Common (textHTML)
 import Data.Newtype (unwrap)
 import Data.StrMap as StrMap
 import Data.Tuple (Tuple(..))
+import Debug.Trace (traceAnyA)
 import Hyper.Conn (Conn)
 import Hyper.Drive (Application, header, hyperdrive, response, status)
 import Hyper.Drive as HD
-import Hyper.Middleware (Middleware(..))
+import Hyper.Middleware (Middleware, lift')
 import Hyper.Node.Server (defaultOptionsWithLogging, runServer)
 import Hyper.Request (class ReadableBody, class Request, getRequestData)
 import Hyper.Response (class Response, class ResponseWritable, ResponseEnded, StatusLineOpen, closeHeaders, respond, writeStatus)
@@ -29,6 +32,7 @@ import Hyper.Status (statusNotFound, statusOK)
 import Node.Buffer (BUFFER)
 import Node.Crypto (CRYPTO)
 import Node.HTTP (HTTP)
+import Polyform.Validation (runValidation)
 import Text.Smolder.HTML (body, h1, form, input)
 import Text.Smolder.HTML.Attributes as A
 import Text.Smolder.Markup (MarkupM, text, (!))
@@ -52,7 +56,11 @@ buildForm code r = do
         ! A.method "POST"
   pure doc
   where
-    buildInput key ([v]) = input ! A.value v ! A.name key
+    buildInput key ([v]) =
+      input
+        ! A.value v
+        ! A.name key
+        ! A.hidden "true"
     buildInput key _ = pure unit
 
 type FormAff e = Aff (crypto :: CRYPTO, buffer :: BUFFER, console :: CONSOLE | e)
@@ -96,7 +104,8 @@ notif
   :: forall e
    . Application (FormAff e) (HD.Request String {}) (HD.Response String)
 notif (HD.Request r) = do
-  liftEff $ log r.body
+  params <- liftEff $ runValidation (validateResponse "demo") r.body
+  traceAnyA params
   pure $
     response "TRUE"
     # status statusOK
@@ -114,6 +123,7 @@ router
     Unit
 router = do
   dat <- getRequestData
+  _ <- lift' $ logShow dat.method
   case dat.method of
     Left GET -> indexMiddleware
     Left POST -> hyperdrive notif
@@ -122,8 +132,9 @@ router = do
       :*> closeHeaders
       :*> respond "Nothing to be found here"
   where
-  bind = ibind
+    bind = ibind
+    join = ijoin
 
 
 main :: forall e. Eff (crypto :: CRYPTO, console :: CONSOLE, buffer :: BUFFER, http :: HTTP, avar :: AVAR | e) Unit
-main = runServer defaultOptionsWithLogging {} (hyperdrive index)
+main = runServer defaultOptionsWithLogging {} router
