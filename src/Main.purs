@@ -13,4 +13,4 @@ import Types (AppEffect)
 type MainEffect e = AppEffect (http :: HTTP, avar :: AVAR | e)
 
 main :: forall e. Eff (MainEffect e) Unit
-main = runServer defaultOptionsWithLogging {} (hyperdrive router)
+main = runServer defaultOptionsWithLogging { code: "demo" } (hyperdrive router)

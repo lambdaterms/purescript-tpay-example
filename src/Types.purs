@@ -14,6 +14,8 @@ type Doc e = Free (MarkupM e) Unit
 
 type Code = String
 
+type Components = { code :: Code }
+
 type AppEffect e = (crypto :: CRYPTO, buffer :: BUFFER, console :: CONSOLE | e)
 
 type AppMonad e = Aff (AppEffect e)
