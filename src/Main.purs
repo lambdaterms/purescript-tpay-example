@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import API.Tpay.Request as Tpay
-import Control.IxMonad ((:*>))
+import Control.IxMonad (ibind, (:*>))
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
@@ -24,7 +24,7 @@ import Hyper.Drive as HD
 import Hyper.Middleware (Middleware(..))
 import Hyper.Node.Server (defaultOptionsWithLogging, runServer)
 import Hyper.Request (class ReadableBody, class Request, getRequestData)
-import Hyper.Response (class ResponseWritable, class Response, ResponseEnded, StatusLineOpen, closeHeaders, respond, writeStatus)
+import Hyper.Response (class Response, class ResponseWritable, ResponseEnded, StatusLineOpen, closeHeaders, respond, writeStatus)
 import Hyper.Status (statusNotFound, statusOK)
 import Node.Buffer (BUFFER)
 import Node.Crypto (CRYPTO)
@@ -121,6 +121,8 @@ router = do
       writeStatus statusNotFound
       :*> closeHeaders
       :*> respond "Nothing to be found here"
+  where
+  bind = ibind
 
 
 main :: forall e. Eff (crypto :: CRYPTO, console :: CONSOLE, buffer :: BUFFER, http :: HTTP, avar :: AVAR | e) Unit
