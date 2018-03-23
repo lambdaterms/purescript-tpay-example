@@ -1,0 +1,15 @@
+{
+  "name": "purescript-tpay-example",
+  "set": "tpay-example",
+  "source": "https://github.com/lambdaterms/package-sets.git",
+  "depends": [
+    "psci-support",
+    "console",
+    "eff",
+    "hyper",
+    "hyperdrive",
+    "aff",
+    "prelude",
+    "tpay"
+  ]
+}
