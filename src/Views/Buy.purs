@@ -2,6 +2,7 @@ module Views.Buy where
   
 import Prelude
 
+import API.Tpay.Request (defaultRequest)
 import API.Tpay.Request as Tpay
 import Control.Monad.Eff.Class (liftEff)
 import Data.Maybe (Maybe(..))
@@ -34,9 +35,8 @@ buy (Request req) = do
     # pure
 
 exampleForm :: Tpay.Request
-exampleForm =
+exampleForm = defaultRequest
   { id: 1010
   , amount: 15.42
   , description: "foo"
-  , crc: Nothing
   }
