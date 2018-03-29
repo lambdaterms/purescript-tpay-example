@@ -3,10 +3,12 @@ module Views.Index where
 import Prelude
 
 import Control.Monad.Eff.Class (liftEff)
+import Data.Foldable (sequence_)
 import Data.MediaType.Common (textHTML)
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..))
 import Database (items)
+import Helpers (inputs)
 import Hyper.Drive (Request(..), header, response, status)
 import Hyper.Status (statusOK)
 import Text.Smolder.HTML (body, form, h1, html, input)
@@ -22,8 +24,9 @@ index (Request req) = do
     doc = html $ do
       body $ do
         h1 (text "Create new transaction")
-        (form
-          (input ! A.type' "submit"))
+        (form $ do
+          sequence_ $ inputs { amount: 42.00, desc: "foo" }
+          input ! A.type' "submit")
           ! A.action "/buy"
           ! A.method "POST"
         h1 (text "Transaction summary")
