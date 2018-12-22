@@ -10,7 +10,7 @@ This example (like `purescript-tpay`) depends on [`decimal.js`][decimal.js] so y
 
 To run this application you need your tpay id (your login id) and tpay code (on the bottom of the page in secure.tpay.com: Ustawienia → powiadomienia). You should also turn on "testing" payments there: Ustawienia → tryb testowy.
 
-Probably the easiest way to test payment flow from localmachine is to use `serveo.net`:
+Probably the easiest way to test payment flow from local machine is to use `serveo.net`:
 
 ```shell
 $ ssh -R 80:localhost:3000 serveo.net
