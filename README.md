@@ -1,14 +1,26 @@
 # purescrit-tpay-example
 
-Example application using Tpay integration. Runs a hyper web-server with page to create new transaction
-and to review received confirmations.
+## Install
 
- - `/` serves template in `Views/Index`
- - `/summary` serves template in `Views/Summary`
- - `/buy` serves template in `Views/Buy`
- - `/notif` exposes notification endpoint to be used by Tpay
+This example (like `purescript-tpay`) depends on [`decimal.js`][decimal.js] so you need to install it (possibly by just running `npm install`).
 
-To run the example You will need to expose server on the internet using f.e.
-[serveo](https://serveo.net/). Then You will have to set the notifications link
-in Tpay administrative panel to `your.serveo.url/notif`.
-Create new transactions via buy and check confirmations in summary.
+## Usage
+
+### Configuration
+
+To run this application you need your tpay id (your login id) and tpay code (on the bottom of the page in secure.tpay.com: Ustawienia → powiadomienia). You should also turn on "testing" payments there: Ustawienia → tryb testowy.
+
+Probably the easiest way to test payment flow from localmachine is to use `serveo.net`:
+
+```shell
+$ ssh -R 80:localhost:3000 serveo.net
+```
+
+Copy domain which is printed on the console to this command:
+
+```shell
+$ nodemon server.js -- --tpay-id $TPAY_ID --tpay-secret $TPAY_CODE --base-url $DOMAIN
+```
+
+Open a browser and test your payment workflow.
+

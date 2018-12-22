@@ -1,36 +1,28 @@
 module Types where
 
-import Prelude
+import Control.Monad.Reader (ReaderT)
+import Data.Decimal (Decimal)
+import Database (Database)
+import Effect.Aff (Aff)
+import HTTPure.Request (Request) as HTTPure
+import Tpay.Response (Response) as Tpay
 
-import API.Tpay.Response as API
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Eff.Ref (Ref)
-import Control.Monad.Free (Free)
-import Database (Database, Transaction, DatabaseConnection)
-import Hyper.Drive (Application, Request, Response)
-import Node.Buffer (BUFFER)
-import Node.Crypto (CRYPTO)
-import Text.Smolder.Markup (MarkupM)
+type Order = { amount ∷ Decimal, description ∷ String }
 
-type Doc e = Free (MarkupM e) Unit
+type Payment = Tpay.Response -- { id ∷ Int, tpayId ∷ String, amount ∷ Number, amountPaid ∷ Number }
 
-type Code = String
-
-type Components = 
-  { code :: Code
-  , transactions :: Database Transaction
-  , payments :: Database API.Response
-  , idGen :: Ref Int
+type TpayConfig =
+  { code ∷ String
+  , id ∷ String
+  , baseUrl ∷ String
   }
 
-type AppEffect e =
-  DatabaseConnection 
-    ( crypto :: CRYPTO
-    , buffer :: BUFFER
-    , console :: CONSOLE
-    | e)
+type Context =
+  { orders ∷ Database Order
+  , payments ∷ Database Payment
+  , request ∷ HTTPure.Request
+  , tpay ∷ TpayConfig
+  }
 
-type AppMonad e = Aff (AppEffect e)
+type AppMonad a = ReaderT Context Aff a
 
-type App eff components = Application (AppMonad eff) (Request String components) (Response String)

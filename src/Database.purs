@@ -2,33 +2,31 @@ module Database where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Ref (REF, Ref, modifyRef, modifyRef', newRef, readRef)
-import Data.StrMap (StrMap)
-import Data.StrMap as StrMap
+import Data.Map (Map)
+import Data.Map (empty, insert) as Map
+import Effect (Effect)
+import Effect.Ref (Ref)
+import Effect.Ref (modify, modify', new, read) as Ref
 
-type Transaction = { id :: String, amount :: Number }
+type ID = String
+type DB a = Map ID a
+type Database a = { ref :: Ref (DB a), seq :: Ref Int }
 
-type Payment = { id :: String, tpayId :: String, amount :: Number, amountPaid :: Number }
+emptyDB :: forall a. Effect (Database a)
+emptyDB = do
+  ref <- Ref.new (Map.empty)
+  seq <- Ref.new 0
+  pure { ref, seq }
 
-type Database a = { ref :: Ref (DB a), key :: a -> String }
+insert :: forall a. Database a -> a -> Effect ID
+insert db val = do
+  id ← nextId db.seq
+  void $ Ref.modify (Map.insert id val) db.ref
+  pure id
+  where
+    nextId :: Ref Int -> Effect String
+    nextId ref = flip Ref.modify' ref \i -> { state : i + 1, value : "prod_" <> show i }
 
-type DB a = StrMap a
+select :: forall a. Database a -> Effect (Map ID a)
+select db = Ref.read db.ref
 
-type DatabaseConnection e = (ref :: REF | e)
-
-nextId :: forall e. Ref Int -> Eff (DatabaseConnection e) String
-nextId ref = modifyRef' ref \i -> { state : i + 1, value : "prod_" <> show i } 
-
-emptyDB :: forall a e. (a -> String) -> Eff (DatabaseConnection e) (Database a)
-emptyDB key = do
-  ref <- newRef (StrMap.empty)
-  pure { ref, key }
-
-insert :: forall a e. Database a -> a -> Eff (DatabaseConnection e) Unit
-insert db val =
-  let str = db.key val
-  in modifyRef db.ref (StrMap.insert str val)
-
-items :: forall a e. Database a -> Eff (DatabaseConnection e) (StrMap a)
-items db = readRef db.ref

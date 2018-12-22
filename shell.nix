@@ -1,5 +1,5 @@
 let
-  pkgs = import "/home/mbuszka/workspace/nixpkgs" {};
+  pkgs = import <nixpkgs> {};
 in
   pkgs.stdenv.mkDerivation {
     name = "none";
@@ -14,7 +14,5 @@ in
     ];
     shellHook = ''
       export PATH=./node_modules/.bin:$PATH
-      export EDITOR=vim
-      export VISUAL=code
     '';
   }
